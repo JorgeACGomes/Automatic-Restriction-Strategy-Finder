@@ -18,3 +18,10 @@ Compatibility issues all solved, now using Dseqrecord for all sequence represent
 Enzyme import and sequence input were changed.
 Above changes were made after meeting with professor Bjorn who helped me figure that out.
 Algorithm not yet implemented, but it should begin to look better during the week.
+
+27/06/2017 (2)
+Restriction_Finder updated in repository
+
+Algorithm already gets all single cutters for the contiguous sequence, that meet the minimum size criteria.
+Also, all of the enzymes that are able to cut twice or more on all of the sequences.
+Next step should be, choosing the enzyme pair that produces the best fragments for gel analysis.
