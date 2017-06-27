@@ -1,5 +1,5 @@
 # Bioinformatics-Project-
-Will store the code developed for an ongoing Bioinformatics Project \nWill also keep track of the changes made throughout the project development
+Will store the code developed for an ongoing Bioinformatics Project and keep track of the changes made throughout the project development
 
 Update History:
 
