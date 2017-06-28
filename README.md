@@ -31,3 +31,10 @@ Next step should be, choosing the enzyme pair that produces the best fragments f
 seqs.txt added to repository
 
 File contains fasta sequences from cloning vectors that will be used for testing.
+
+
+28/06/2017 
+Restriction_Finder updated in repository
+
+Plasmid class has been added to make the contiguous/non-contiguous sequences manipulation easier.
+Several changes to enzyme search algorithm 
