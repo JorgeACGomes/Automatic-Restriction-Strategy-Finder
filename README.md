@@ -37,4 +37,9 @@ File contains fasta sequences from cloning vectors that will be used for testing
 Restriction_Finder updated in repository
 
 Plasmid class has been added to make the contiguous/non-contiguous sequences manipulation easier.
-Several changes to enzyme search algorithm 
+Several changes to enzyme search algorithm.
+
+29/06/2017 
+Restriction_Finder updated in repository
+
+Enzyme selection algorithm already works, now i just need to get the set that produces the best results, for a future gel analysis.
