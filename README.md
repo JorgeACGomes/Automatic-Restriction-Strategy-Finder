@@ -1,4 +1,4 @@
-# Bioinformatics -Project- 
+# Bioinformatics Project 
 
 Automatic restriction strategy finder for Synthetic Biology Constructs
 
@@ -10,6 +10,10 @@ Will also include the preliminary report, which consists of a more theoretical r
 which will add the algorithm explanation, the idea behind the chosen approach, useful explanations, usage examples and also results obtained with chosen testcases.
 
 Pydna repository: https://github.com/BjornFJohansson/pydna
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
 
 Update History:
 
