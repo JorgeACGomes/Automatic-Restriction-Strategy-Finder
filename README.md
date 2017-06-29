@@ -1,5 +1,15 @@
-# Bioinformatics-Project-
-Will store the code developed for an ongoing Bioinformatics Project and keep track of the changes made throughout the project development
+# Bioinformatics -Project- 
+
+Automatic restriction strategy finder for Synthetic Biology Constructs
+
+Will store the code developed for an ongoing Bioinformatics Project and keep track of the changes made throughout the project development.
+The main goal of this project is to design an algorithm for the automatic selection of the most effective restriction enzymes for DNA analysis based on user defined criteria. With those enzymes we will be able to perform a diagnostic digest over n user inputted sequences.
+The algorithm will then be implemented in Python and embedded within Pydna software package, or make use of some of its resources.
+
+Will also include the preliminary report, which consists of a more theoretical review on Synthetic Biology, DNA cloning and restriction, and the final report
+which will add the algorithm explanation, the idea behind the chosen approach, useful explanations, usage examples and also results obtained with chosen testcases.
+
+Pydna repository: https://github.com/BjornFJohansson/pydna
 
 Update History:
 
@@ -30,7 +40,7 @@ Next step should be, choosing the enzyme pair that produces the best fragments f
 27/06/2017 (4)
 seqs.txt added to repository
 
-File contains fasta sequences from cloning vectors that will be used for testing.
+File contains fasta sequences from cloning vectors found in genbank that will be used for testing.
 
 
 28/06/2017 
@@ -43,3 +53,8 @@ Several changes to enzyme search algorithm.
 Restriction_Finder updated in repository
 
 Enzyme selection algorithm already works, now i just need to get the set that produces the best results, for a future gel analysis.
+
+29/06/2017(2)
+Preliminary_report.pdf added to repository
+
+As suggested by professor Bjorn I will also include the written reports made for the project.
