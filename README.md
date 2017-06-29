@@ -60,5 +60,9 @@ Enzyme selection algorithm already works, now i just need to get the set that pr
 
 29/06/2017(2)
 Preliminary_report.pdf added to repository
+seqs_vegas.txt added to repository
 
 As suggested by professor Bjorn I will also include the written reports made for the project.
+As I needed a different testing set i included the seqs_vegas.txt which includes sequences from 
+yeast plasmid cloning experiments, retrieved from:
+Mitchell, Leslie A., et al. "Versatile genetic assembly system (VEGAS) to assemble pathways for expression in S. cerevisiae." Nucleic acids research 43.13 (2015): 6620-6630.
