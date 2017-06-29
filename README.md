@@ -12,10 +12,10 @@ which will add the algorithm explanation, the idea behind the chosen approach, u
 Pydna repository: https://github.com/BjornFJohansson/pydna
 
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------------------------------------------------------------------#
 
 
-Update History:
+Changelog:
 
 27/06/2017 
 Restriction_Finder added to repository
