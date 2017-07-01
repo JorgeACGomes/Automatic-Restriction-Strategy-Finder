@@ -65,4 +65,14 @@ seqs_vegas.txt added to repository
 As suggested by professor Bjorn I will also include the written reports made for the project.
 As I needed a different testing set i included the seqs_vegas.txt which includes sequences from 
 yeast plasmid cloning experiments, retrieved from:
+
 Mitchell, Leslie A., et al. "Versatile genetic assembly system (VEGAS) to assemble pathways for expression in S. cerevisiae." Nucleic acids research 43.13 (2015): 6620-6630.
+
+01/07/2017
+Example.ipynb added to repository
+Restriction_Finder updated in repository
+
+Added a jupyter notebook on how to use Restriction_Finder.
+Restriction_Finder is now working properly, and in its final form, for now.
+It's lacking documenting, which will be added in the next days. 
+However the code is heavily commented and can be easily understood without proper documentation.
