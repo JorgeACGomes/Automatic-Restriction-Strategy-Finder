@@ -1,11 +1,20 @@
 from pydna.common_sub_strings import common_sub_strings as overlaps
 from operator import itemgetter as _itemgetter
+from itertools import permutations as _permutations
+from itertools import chain as _chain
+from collections import Counter
 from pydna.dseqrecord import Dseqrecord
+from pydna.gel import Gel
+from pydna.gel import weight_standard_sample
 from Bio import SeqIO
 from Bio.Restriction import CommOnly as Commercial
-from itertools import permutations as _permutations
-# AllEnzymes is empty
-# from Bio.Restriction import AllEnzymes
+from Bio.Restriction import NonComm as NonComm
+from random import choice,sample
+
+# this is a workaround for the AllEnzymes bug , which is recognized as a set in Python 3 instead
+# of a restrictionBatch object
+All = NonComm
+All.update(Commercial)
 
 
 class Plasmid:
@@ -30,58 +39,101 @@ class Plasmid:
 
 class Restriction_Finder:
 
-    def __init__(self, seqs, min_size=300, r_enzymes=Commercial, budget = True):
+    def __init__(self, seqs, min_size=150, r_enzymes=Commercial, optim=True, gel=True, iso=True):
         self.seqs = seqs
+        for seq in self.seqs:
+            if type(seq) != Dseqrecord:
+                warning('Dseqrecord')
+                return
+        lens = [len(x.seq) for x in self.seqs]
+        if min(lens) < 750:
+            warning('seq_size')
+            return
         self.contiguous = self.longest_contiguous_sequence()
-        self.re = r_enzymes
-        self.min_size = min_size
-        self.budget = budget
-        self.linear = self.seqs[0].linear
-        self.plasmids = [Plasmid(x, self.contiguous) for x in self.seqs]
-        # doubt here
-        if self.linear:
-            self.restriction_finder()
+        self.results = None
+        self.best = None
 
-        #else:
-        #    self.restriction_finder_circular()
-        # self.restriction_finder()
+        if r_enzymes not in [All, Commercial]:
+            self.re = Commercial
+            warning('enzymes')
+        else:
+            if r_enzymes == All:
+                warning('enzymes2')
+            self.re = r_enzymes
+            
+        if type(min_size) not in [int, float]:
+            self.min_size = 150
+            warning('min_size')
+        else:
+            self.min_size = min_size
+            
+        if type(optim) is not bool:
+            self.optim = True
+            warning('optim')
+        else:
+            if optim is False:
+                warning('optim2')
+            self.optim = optim
+            
+        if type(gel) is not bool:
+            self.gel = True
+            warning('gel')
+        else:    
+            self.gel = gel
+            
+        if type(iso) is not bool:
+            self.iso = True
+            warning('iso')
+        else:
+            if iso == False:
+                warning('iso2')
+            self.iso = iso
+                
+        self.plasmids = [Plasmid(x, self.contiguous) for x in self.seqs]
+        self.restriction_finder()
 
     # gets the longest contiguous sequence in a list of sequences
     # pairwise alignment
+
     def longest_contiguous_sequence(self):
-        init = overlaps(str(self.seqs[0].seq).lower(), str(self.seqs[1].seq).lower(), 25)
-        ref = get_longest(str(self.seqs[1].seq).lower(), init)
-        for s in self.seqs[2:]:
-            contiguous = get_longest(str(s.seq).lower(), overlaps(ref, str(s.seq).lower(), 25))
-            ref = contiguous
-        return Dseqrecord(ref)
-
-    def warning(self):
-        if self.budget:
-            print('It was not possible to find a suitable combination of enzymes to perform a diagnostic digest'
-                  'Try setting budget = False')
+        if len(self.seqs[0].seq)>50 :
+            lim = 25
         else:
-            print('It was not possible to find a suitable combination of enzymes to perform a diagnostic digest')
-
+            lim = int(len(self.seqs[0].seq)/2)
+        try:
+            init = overlaps(str(self.seqs[0].seq).lower(), str(self.seqs[1].seq).lower(), lim)
+            ref = get_longest(str(self.seqs[1].seq).lower(), init)
+            for s in self.seqs[2:]:
+                contiguous = get_longest(str(s.seq).lower(), overlaps(ref, str(s.seq).lower(), lim))
+                ref = contiguous
+            return Dseqrecord(ref)
+        except ValueError:
+            return warning('similarity')
 
     def restriction_finder(self):
         # firstly lets find all of the enzymes that cut through the contiguous sequence
 
         # this dictionary is made up from all of the re that cut through the contiguous sequence
+        # contiguous sequence is a linear
         cuts_contiguous = self.re.search(self.contiguous.seq, linear=True)
-        enzymes = []
+        enzymes1 = []
 
         # to see if there are enzymes that cut more than once (produce two or more fragments)
 
         for re, sites in cuts_contiguous.items():
             # if it cuts
-            if len(sites) > 0:
-                # now for single cutters
-                # test for single cutters on contiguous sequence
-                if len(self.contiguous.cut(re)) == 2:
-                    # test for fragment size
-                    if self.has_size(self.contiguous.cut(re)):
-                        enzymes.append(re)
+            try:
+                if len(sites) > 0:
+                    # now for single cutters
+                    # test for single cutters on contiguous sequence
+                    # as it is set as two fragments, will work on both linear and circular
+                    if len(self.contiguous.cut(re)) == 2:
+                        # test for fragment size
+                        if self.has_size(self.contiguous.cut(re)):
+                            enzymes1.append(re)
+            except TypeError:
+                # this block was made to avoid some enzymes that cause issues when using cut
+                pass
 
         # until here we have all the enzymes that execute single cuts through the contiguous sequence
         # stored in enzymes
@@ -89,26 +141,19 @@ class Restriction_Finder:
         # now enzymes that cut 2 or more times through all sequences' non-contiguous site
         # which can be acessed by the plasmid.insert attribute
         for s in self.plasmids:
-                cuts_s = self.re.search(s.insert.seq, linear=True)
-                # double cutters, and size verification
-                cuts_s = [x for x in cuts_s if ((len(s.insert.cut(x)) > 2) and self.has_size(s.insert.cut(x), 3))]
+                cuts_s = self.re.search(s.insert.seq, linear=s.total.linear)
+                # double cutters or more
+                cuts_s = [x for x, y in cuts_s.items() if len(y) >= 2]
                 s.set_cutters(set(cuts_s))
 
         # see if there are enzymes that cuts through all
         # which would be the best case scenario as 1 enzyme would be enough, and allow to save money
         # as the plasmids are objects with no id i might as well store them as their index on self.plasmids
 
-        # !!!!!!
-        # could i include a parameter here that could select the else approach if the results aren't good for
-        # sequence differentiation?
-        # !!!!!!
-
         enz_all = [x.cutters for x in self.plasmids]
 
-        # budget option --> tries to obtain better results using more enzymes
-
-        if len(enz_all[0].intersection(*enz_all[1:])) != 0 and self.budget:
-            enzymes2 = enz_all[0].intersection(*enz_all[1:])
+        if len(enz_all[0].intersection(*enz_all[1:])) != 0:
+            enzymes2 = list(enz_all[0].intersection(*enz_all[1:]))
 
         # cause if there aren't:
         # we must search for a group of enzymes (up to the number of inputed sequences)
@@ -122,14 +167,15 @@ class Restriction_Finder:
                 for p in range(len(self.plasmids)):
                     if e in self.plasmids[p].cutters:
                         mapping[e].append(p)
-            # now selecting the enzymes
 
+            # now selecting the enzymes
             # how many sequences does the most versatile enzyme cut?
             mx = len(mapping[max(mapping, key=lambda x: len(mapping[x]))])
 
             # get the most versatile ones // the lesser versatile ones
             most_versatile = [x for x in mapping.keys() if len(mapping[x]) == mx]
-            # if mx = 1 the most versatile enzymes will be the same as the less versatile
+
+            # if mx = 1 then the most versatile enzymes will be the same as the less versatile
             if mx != 1:
                 less_versatile = [x for x in mapping.keys() if x not in most_versatile]
 
@@ -204,6 +250,7 @@ class Restriction_Finder:
                         p_cuts = []
                         for e2 in p:
                             p_cuts.extend(mapping[e2])
+
                         # as in this case all of the plasmids are missing cuts, we need to compare with all plasmids
                         if sorted(p_cuts) == list(range(len(self.plasmids))):
                             combi = [x for x in p]
@@ -213,52 +260,279 @@ class Restriction_Finder:
                         # if combos has enzymes then we don't need to search further
                         found = True
                     else:
-                        # ver melhor isto
-                        return self.warning()
+                        return warning('final')
 
             enzymes2 = combos
 
         # if everything went well we now have all the enzymes that cut on the contiguous sequence just once (enzymes)
         # and the enzymes that cut through all the sequences more than just once (enzymes2)
-        # now, how should i pick the enzymes for the selective digestion?
-        self.best_set(enzymes, enzymes2)
+        # now, we should pick the enzymes that provide the best results
 
+        # print(enzymes1, enzymes2)
+        self.best_set(enzymes1, enzymes2)
 
     def best_set(self, enzymes1, enzymes2):
         # this function should retrieve the best combination of enzymes for gel analysis
-        # hipothesis: check all permutations of enzymes and enzymes2 and test for fragment size, with subsequent digest?
-        # hipothesis: get a pair of enzymes that produce different fragments for different seqs
-        # should i maximize the minimum difference(in bp) between the fragments produced?
+        # hipothesis: check all permutations of enzymes and enzymes2 and test for fragment size
+        # since we are trying to minimize the costs let's see which re's from enzymes1 are present in enzymes 2
+        # and if possible try to solve it only with enzymes that are shared between them.
 
-        # i guess we should only select re from enzymes that do not feature in enzymes2
-        enzymes_f = [x for x in enzymes1 if x not in enzymes2]
-        pass
+        # the approach will be different if enzymes2 comes without the mapping step
+        if type(enzymes2[0]) == tuple:
+            no_map = False
+        else:
+            no_map = True
 
-    def has_size(self, frags, shrink=1):
+        if no_map:
+            common = [x for x in enzymes1 if x in enzymes2]
+            uncommon = [x for x in enzymes1 if x not in common]
+        else:
+            common = []
+            for tup in enzymes2:
+                for e in tup:
+                    if e in enzymes1:
+                        common.append(tup)
+            uncommon = [x for x in enzymes1 if x not in common]
+
+        # since we now have the common ones lets see what results we get from using those
+        res = []
+        for e in common:
+            frags = []  # list of lists of fragments
+            for p in self.plasmids:
+                try:
+                    f = p.total.cut(*[e])  # all fragments for each plasmid // e can be a tuple
+                    proceed = self.has_size(f)  # for each plasmid check if all frags meet size criteria
+                    if proceed:
+                        frags.append(f)
+                    else:  # if any of the plasmids cut by e enzyme does not meet the size criteria, e is not considered
+                        break
+                except (TypeError, IndexError) as error:
+                    # typeError can be raised when using some enzymes of AllEnzymes
+                    # IndexError is raised sometimes by cut method from Dseq, reason Unknown
+                    pass
+
+            if len(frags) == len(self.plasmids):
+                if bands_differ(frags):
+                    res.append(e)  # if the enzyme fills all of the requirements it can be used
+
+        if len(res) != 0:
+            # If we already have enzymes in res we don't need to search any further
+            self.results = res
+            if self.optim:
+                return self.optimize_bands(res)
+            else:
+                return self.to_gel(choice(res))
+
+        else:
+            # If it reaches this point we will try to get the best possible results with enzymes
+            # that weren't used before so we will be mixing between uncommon and re's from
+            # enzymes2
+            last_chance = []
+            for e in uncommon:
+                for etup in enzymes2:
+                    if type(etup) == tuple:
+                        s = [e]+list(etup)
+                    else:
+                        s = [e, etup]
+
+                    if sorted(s) not in last_chance:
+                        last_chance.append(sorted(s))
+            
+            # we could only take a sample since this list could get really big
+            # and make the program run for days, although it takes out some 
+            # of the results reproduceability, it is the only way to make it
+            # work in useful time
+            try:
+                last_chance = sample(last_chance,50)
+            except ValueError:
+                last_chance = last_chance
+            for e in last_chance:
+                frags = []
+                for p in self.plasmids:
+                    try:
+                        f = p.total.cut(*[e])
+                        proceed = self.has_size(f)
+                        if proceed:
+                            frags.append(f)
+                        else:
+                            break
+                    except (TypeError, IndexError) as error:
+                        pass
+
+        if len(res) != 0:
+            self.results = res
+            if self.optim:
+                return self.optimize_bands(res)
+            else:
+                # may not produce the best result but saves time
+                return self.to_gel(choice(res))
+        else:
+            return warning('min_size3')
+
+    def optimize_bands(self, res):
+        """This function receives a list of enzymes and retrieves the gel result
+        for the enzyme that produces the maximum of the minimum differences between
+        each band, to facilitate the gel analysis
+        res : list
+        a list of enzymes, or a list of lists(or tuples) each with a set of enzymes"""
+        if len(res) > 1:
+            diffs = {}
+            for e in res:  # for each enzyme given in res
+                lsfrags = [p.total.cut(*[e]) for p in self.plasmids]
+                flat_frags = _chain(*lsfrags)
+                dif = 50000  # arbitrary value
+                for band in flat_frags:
+                    for band2 in flat_frags:
+                        if band.seq != band2.seq:
+                            l_dif = abs(len(band.seq)-len(band2.seq))
+                            if l_dif < dif:
+                                dif = l_dif
+                diffs[e] = l_dif
+            
+            best_possible = max(diffs.items(), key=_itemgetter(1))[0]
+            if self.iso is False:
+                val_counter = Counter(diffs.values())
+                best_unique = [(k,v) for k, v in diffs.items() if val_counter[v] == 1]
+                if len(best_unique) != 0:
+                    return self.to_gel(max(best_unique, key=_itemgetter(1))[0])
+                else:
+                    warning('enzymes4')
+
+            return self.to_gel(best_possible)
+        else:
+            return self.to_gel(res[0])
+
+    def to_gel(self, enzymes):
+        self.best = enzymes
+        if self.gel:
+            lsfrags = [p.total.cut(*[enzymes]) for p in self.plasmids]
+            st = weight_standard_sample('1kb+_GeneRuler')
+            lsfrags.insert(0, st)
+            print('Gel obtained using', enzymes)
+            Gel(lsfrags, gel_len=16, wellsep = 8).run()
+            # self.solutions()
+
+        else:
+            self.solutions()
+
+    def has_size(self, frags):
         for f in frags:
-            if len(str(f.seq)) < int(self.min_size/shrink):
+            if len(str(f.seq)) < self.min_size:
                 return False
         return True
+    
+    def lanes(self):
+        """Retrieves a list with sequence IDs, in the same order as they appear on the gel"""
+        Ids = []
+        counter = 1
+        if self.plasmids[0].total.name == 'name?':
+            warning('Ids')
+        for seq in self.plasmids:
+            if seq.total.name == 'name?':
+                Ids.append('Seq '+str(counter))
+                counter += 1
+            else:
+                Ids.append(seq.total.name)
+                counter += 1
+        print('Lane order:\n', Ids)
+    
+    def solutions(self):
+        if self.are_isoschizomers():
+            iso = True
+        else:
+            iso = False
+        if type(self.best) == list:
+            print('Results obtained using the following group of enzymes:')
+            for e in self.best:
+                print(e, sep=',')
+            print('Other possible solutions:')
+            for el in self.results:
+                if el != self.best:
+                    print(el)
+        else:
+            if iso:
+                warning('enzyme3')
+            print('Best enzyme:\n', self.best)
+            print('Other possible solutions:')
+            b = self.results.index(self.best)
+            print(self.results[0:b]+ self.results[b+1:])
+
+        return self.results
+
+    def are_isoschizomers(self):
+        """Defines if any of the results are isoschizomers"""
+        for e in self.results:
+            if self.best in e.isoschizomers():
+                return True
+        return False
 
 
-# auxiliary functions
+# ------------------------------------ auxiliary functions ----------------------------------------------------------- #
+
+
 # gets the tuple with the maximum value for the 2nd index
 # and slices the sequence with those given parameters
 def get_longest(seq, out_list):
-    coords = max(out_list, key=_itemgetter(2))  # output do overlaps
+    coords = max(out_list, key=_itemgetter(2))
     start = coords[1]
     end = coords[1] + coords[2]
     return seq[start:end]
 
+
+# given a list of lists of fragments it sees if there's a unique band in each list of fragments
+def bands_differ(lsfrags):
+    # lsfrags is a list made of fragments for each plasmid, so len(lsfrags) == len(self.plasmids)
+    for p in range(len(lsfrags)):
+        others = [len(x.seq) for x in _chain(*(lsfrags[:p] + lsfrags[(p+1):]))]  # list of lists to single list
+        count = 0
+        for band in lsfrags[p]:
+            if len(band.seq) not in others:
+                count += 1
+        if count == 0:
+            return False
+    return True
+
+
+# for warnings regarding inputs and results
+def warning(code):
+    abort = ['Dseqrecord', 'Seq_Size']
+    d = {'enzyme': 'The introduced enzyme set is not recognized. Using Commercial\n',
+         'enzyme2': 'Using all of the known enzymes, some of which may not be available commercially\n',
+         'enzyme3': 'The best enzyme is an isoschizomer so if you run Restriction_Finder() multiple times you will '
+                    'get different best enzymes but same digestion result\n',
+        'enzymes4': 'All of the possible results are isoschizomers, using the best one\n',
+         'min_size': 'Introduced minimun fragment size is not numeric. Using 150bp\n',
+         'min_size2': 'Minimum fragment size is too big, results may not exist, try lowering it next time\n',
+         'min_size3': 'It was not possible to find a suitable combination of enzymes to perform a diagnostic digest,\n'
+                      ' lower minimum fragment size is recommended\n',
+         'gel': 'Gel parameter must be either True or False. Using True\n',
+         'optim': 'Optim parameter must be either True or False. Using True\n',
+         'optim2': 'Band optimization is disabled, results will be faster, although gel readibility may be worse\n',
+         'final': 'It was not possible to find a suitable combination of enzymes to perform a diagnostic digest\n',
+         'Ids': 'Sequences were not identified so consider the same order of input\n',
+         'iso': 'Isoschizomers parameter must be either True or False. Using True\n',
+         'iso2': 'Isoschizomers parameter set to False. Unless all of the possible results are isoschizomers, '
+                 'results will not be optimal\n',
+         'similarity': 'Sequences do not share big similarity, which diverges from the objective of this program\n',
+         'seq_size': 'Inputted sequences are too small and thus will not provide visible bands in an agarose gel\n',
+         'Dseqrecord': 'At least one of the inputted seqs is not a Dseqrecords\n'
+         }
+    print(d[code])
+    if code in abort:
+        print('Program will now abort')
+        return
+    
 # testing
 
 if __name__ == '__main__':
     # as i will be testing with plasmids with over 2k bp might as well use a fasta file as input
-    fileseqs = [Dseqrecord(seq, circular=False) for seq in SeqIO.parse('seqs.txt', 'fasta')]
-
-    rf = Restriction_Finder(fileseqs, 300, Commercial, budget=False)
-    # insert sizes:
-    # 446
-    # 568
-    # 2317
-    # 500
+    fileseqs = [Dseqrecord(seq, circular=True) for seq in SeqIO.parse('seqs_vegas.txt', 'fasta')]
+    import time
+    ti = time.time()
+    rf = Restriction_Finder(fileseqs, 150, Commercial, iso=True)
+    #rf.to_gel(BcoDI)
+    #rf.lanes()
+    #print(rf.best)
+    #sol = rf.solutions()
+    #fileseqs[0].cut(*rf.results)
+    print(round(time.time()-ti, 3))
