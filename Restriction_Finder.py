@@ -18,8 +18,14 @@ All.update(Commercial)
 
 
 class Plasmid:
-    # total is the complete sequence, contiguous is the contiguous part, and insert is the non-contiguous
-    # cutters are a set of enzymes that cut through the plasmids' insert
+    
+    """Class to store information on each sequence considering its plasmid
+    configuration namely the presence of a contiguous sequence shared with 
+    other sequences but also a different region commonly named as insert.
+    Cutters attribute stores which enzymes do cut on insert sequence
+    Further documenting will not be made since it is not supposed to be used
+    isolated from Restriction_Finder, and as a dependency of it"""
+    
     def __init__(self, Dseqrecord, contiguous):
         self.total = Dseqrecord
         self.contiguous = contiguous
@@ -27,7 +33,6 @@ class Plasmid:
         self.cutters = None
 
     def get_insert(self):
-        # need to check if this is correct
         start = str(self.total.seq).lower().find(str(self.contiguous.seq).lower())
         end = start + len(self.contiguous.seq) - 1
         insert = str(self.total.seq)[end + 1::] + str(self.total.seq)[0:start]
@@ -41,6 +46,11 @@ class Restriction_Finder:
 
     def __init__(self, seqs, min_size=150, r_enzymes=Commercial, optim=True, gel=True, iso=True):
         self.seqs = seqs
+        
+        # verifications for sequences
+        if len(self.seqs) < 2:
+            warning('seq_num')
+            return
         for seq in self.seqs:
             if type(seq) != Dseqrecord:
                 warning('Dseqrecord')
@@ -49,6 +59,7 @@ class Restriction_Finder:
         if min(lens) < 750:
             warning('seq_size')
             return
+        
         self.contiguous = self.longest_contiguous_sequence()
         self.results = None
         self.best = None
@@ -92,10 +103,13 @@ class Restriction_Finder:
         self.plasmids = [Plasmid(x, self.contiguous) for x in self.seqs]
         self.restriction_finder()
 
-    # gets the longest contiguous sequence in a list of sequences
-    # pairwise alignment
 
     def longest_contiguous_sequence(self):
+        
+        """gets the longest contiguous sequence from the list of sequences in
+        the Restriction_Finder object. Contiguous sequence was found using 
+        pairwise alignment"""
+        
         if len(self.seqs[0].seq)>50 :
             lim = 25
         else:
@@ -111,10 +125,18 @@ class Restriction_Finder:
             return warning('similarity')
 
     def restriction_finder(self):
+        
+        """Initial part of the algorithm that searches 1st for single cutters 
+        on the contiguous area, and 2nd enzymes that cut 2 or more times on the non
+        shared sequence. Most of the function complies the second search since
+        it must search for every combination of possible enzymes, covering every
+        possible case. If it finds suitable enzymes they're sent to best_set.
+        This function is heavily commented to make up for its extension and high
+        possibility of getting lost while trying to understand it"""
+        
         # firstly lets find all of the enzymes that cut through the contiguous sequence
 
         # this dictionary is made up from all of the re that cut through the contiguous sequence
-        # contiguous sequence is a linear
         cuts_contiguous = self.re.search(self.contiguous.seq, linear=True)
         enzymes1 = []
 
@@ -272,10 +294,14 @@ class Restriction_Finder:
         self.best_set(enzymes1, enzymes2)
 
     def best_set(self, enzymes1, enzymes2):
-        # this function should retrieve the best combination of enzymes for gel analysis
-        # hipothesis: check all permutations of enzymes and enzymes2 and test for fragment size
-        # since we are trying to minimize the costs let's see which re's from enzymes1 are present in enzymes 2
-        # and if possible try to solve it only with enzymes that are shared between them.
+        
+        """this function should retrieve the best combination of enzymes for 
+        gel analysis. Since we are trying to minimize the costs let's see which
+        re's from enzymes1 are present in enzymes 2 and if possible try to 
+        solve it only with enzymes that are shared between them. As previously 
+        done, all of the possible cases are covered up, thus explaining the 
+        extension of the code. Enzymes will be tested for fragment size and
+        optionally gel bands quality."""
 
         # the approach will be different if enzymes2 comes without the mapping step
         if type(enzymes2[0]) == tuple:
@@ -370,11 +396,13 @@ class Restriction_Finder:
             return warning('min_size3')
 
     def optimize_bands(self, res):
+        
         """This function receives a list of enzymes and retrieves the gel result
         for the enzyme that produces the maximum of the minimum differences between
         each band, to facilitate the gel analysis
         res : list
         a list of enzymes, or a list of lists(or tuples) each with a set of enzymes"""
+        
         if len(res) > 1:
             diffs = {}
             for e in res:  # for each enzyme given in res
@@ -403,6 +431,9 @@ class Restriction_Finder:
             return self.to_gel(res[0])
 
     def to_gel(self, enzymes):
+        """Executes the gel, or prints out the solutions 
+        for the diagnostic digest"""
+        
         self.best = enzymes
         if self.gel:
             lsfrags = [p.total.cut(*[enzymes]) for p in self.plasmids]
@@ -416,13 +447,15 @@ class Restriction_Finder:
             self.solutions()
 
     def has_size(self, frags):
+        """Size verification for all frags"""
         for f in frags:
             if len(str(f.seq)) < self.min_size:
                 return False
         return True
     
     def lanes(self):
-        """Retrieves a list with sequence IDs, in the same order as they appear on the gel"""
+        """Retrieves a list with sequence IDs, 
+        in the same order as they appear on the gel"""
         Ids = []
         counter = 1
         if self.plasmids[0].total.name == 'name?':
@@ -437,6 +470,10 @@ class Restriction_Finder:
         print('Lane order:\n', Ids)
     
     def solutions(self):
+        """Prints the solutions obtained for the diagnostic digest"""
+        if self.results is None:
+            warning('results')
+            return 
         if self.are_isoschizomers():
             iso = True
         else:
@@ -461,27 +498,34 @@ class Restriction_Finder:
 
     def are_isoschizomers(self):
         """Defines if any of the results are isoschizomers"""
+        if self.results is None:
+            warning('results')
+            return
         for e in self.results:
             if self.best in e.isoschizomers():
                 return True
         return False
 
 
-# ------------------------------------ auxiliary functions ----------------------------------------------------------- #
+# -------------- auxiliary functions --------------------- #
 
 
-# gets the tuple with the maximum value for the 2nd index
-# and slices the sequence with those given parameters
 def get_longest(seq, out_list):
+    """gets the tuple with the maximum value for the 2nd index
+    and slices the sequence with those given parameters"""
+    
     coords = max(out_list, key=_itemgetter(2))
     start = coords[1]
     end = coords[1] + coords[2]
     return seq[start:end]
 
 
-# given a list of lists of fragments it sees if there's a unique band in each list of fragments
+
 def bands_differ(lsfrags):
-    # lsfrags is a list made of fragments for each plasmid, so len(lsfrags) == len(self.plasmids)
+    """given a list of lists of fragments it sees if there's 
+    a unique band in each list of fragments"""
+    # lsfrags is a list made of fragments for each plasmid, 
+    # so len(lsfrags) == len(self.plasmids)
     for p in range(len(lsfrags)):
         others = [len(x.seq) for x in _chain(*(lsfrags[:p] + lsfrags[(p+1):]))]  # list of lists to single list
         count = 0
@@ -493,18 +537,19 @@ def bands_differ(lsfrags):
     return True
 
 
-# for warnings regarding inputs and results
 def warning(code):
-    abort = ['Dseqrecord', 'Seq_Size']
+    """for warnings regarding inputs and results"""
+    
+    abort = ['Dseqrecord', 'Seq_Size','seq_num']
     d = {'enzyme': 'The introduced enzyme set is not recognized. Using Commercial\n',
-         'enzyme2': 'Using all of the known enzymes, some of which may not be available commercially\n',
+         'enzyme2': 'Using all of the known enzymes, some of which may not be available commercially\n, use Commercial instead\n',
          'enzyme3': 'The best enzyme is an isoschizomer so if you run Restriction_Finder() multiple times you will '
                     'get different best enzymes but same digestion result\n',
         'enzymes4': 'All of the possible results are isoschizomers, using the best one\n',
          'min_size': 'Introduced minimun fragment size is not numeric. Using 150bp\n',
          'min_size2': 'Minimum fragment size is too big, results may not exist, try lowering it next time\n',
-         'min_size3': 'It was not possible to find a suitable combination of enzymes to perform a diagnostic digest,\n'
-                      ' lower minimum fragment size is recommended\n',
+         'min_size3': 'It was not possible to find a suitable combination of enzymes to perform a diagnostic digest.\n'
+                      'A lower minimum fragment size is recommended\n',
          'gel': 'Gel parameter must be either True or False. Using True\n',
          'optim': 'Optim parameter must be either True or False. Using True\n',
          'optim2': 'Band optimization is disabled, results will be faster, although gel readibility may be worse\n',
@@ -515,7 +560,9 @@ def warning(code):
                  'results will not be optimal\n',
          'similarity': 'Sequences do not share big similarity, which diverges from the objective of this program\n',
          'seq_size': 'Inputted sequences are too small and thus will not provide visible bands in an agarose gel\n',
-         'Dseqrecord': 'At least one of the inputted seqs is not a Dseqrecords\n'
+         'Dseqrecord': 'At least one of the inputted seqs is not a Dseqrecords\n',
+         'seq_num': 'A minimum of 2 sequences is required\n',
+         'results': 'There were no results for the given parameters and sequences\n'
          }
     print(d[code])
     if code in abort:
@@ -525,14 +572,20 @@ def warning(code):
 # testing
 
 if __name__ == '__main__':
-    # as i will be testing with plasmids with over 2k bp might as well use a fasta file as input
     fileseqs = [Dseqrecord(seq, circular=True) for seq in SeqIO.parse('seqs_vegas.txt', 'fasta')]
     import time
     ti = time.time()
-    rf = Restriction_Finder(fileseqs, 150, Commercial, iso=True)
+    rf = Restriction_Finder(fileseqs, 150, Commercial, optim=False, iso=True)
+    #for p in rf.plasmids:
+    #   print(len(p.insert.seq))
+    #print(len(rf.contiguous.seq))
+    #from numpy import mean 
+    #print(mean([len(x.total) for x in rf.plasmids]))
+    rf.solutions()
     #rf.to_gel(BcoDI)
     #rf.lanes()
-    #print(rf.best)
+    print(rf.are_isoschizomers())
+    rf.lanes()
     #sol = rf.solutions()
     #fileseqs[0].cut(*rf.results)
     print(round(time.time()-ti, 3))
