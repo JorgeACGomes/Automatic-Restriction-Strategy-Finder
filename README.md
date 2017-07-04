@@ -1,4 +1,5 @@
 # Bioinformatics Project 
+Project Supervisor: Bjorn Johansson
 
 Automatic restriction strategy finder for Synthetic Biology Constructs
 
@@ -18,6 +19,7 @@ Pydna repository: https://github.com/BjornFJohansson/pydna
 Changelog:
 
 27/06/2017 
+
 Restriction_Finder added to repository
 
 It's a super preliminary approach, just to get around with the way the packages from pydna and biopython work.
@@ -26,6 +28,7 @@ It should be pushed sooner, however I wasn't yet too capable with git.
 
 
 27/06/2017 (2)
+
 Restriction_Finder updated in repository
 
 Compatibility issues all solved, now using Dseqrecord for all sequence representation, and cut method from Dseq instead of catalyse from bio.restriction package.
@@ -34,6 +37,7 @@ Above changes were made after meeting with professor Bjorn who helped me figure 
 Algorithm not yet implemented, but it should begin to look better during the week.
 
 27/06/2017 (3)
+
 Restriction_Finder updated in repository
 
 Algorithm already gets all single cutters for the contiguous sequence, that meet the minimum size criteria.
@@ -42,23 +46,27 @@ Next step should be, choosing the enzyme pair that produces the best fragments f
 
 
 27/06/2017 (4)
+
 seqs.txt added to repository
 
 File contains fasta sequences from cloning vectors found in genbank that will be used for testing.
 
 
 28/06/2017 
+
 Restriction_Finder updated in repository
 
 Plasmid class has been added to make the contiguous/non-contiguous sequences manipulation easier.
 Several changes to enzyme search algorithm.
 
 29/06/2017 
+
 Restriction_Finder updated in repository
 
 Enzyme selection algorithm already works, now i just need to get the set that produces the best results, for a future gel analysis.
 
 29/06/2017(2)
+
 Preliminary_report.pdf added to repository
 seqs_vegas.txt added to repository
 
@@ -69,10 +77,37 @@ yeast plasmid cloning experiments, retrieved from:
 Mitchell, Leslie A., et al. "Versatile genetic assembly system (VEGAS) to assemble pathways for expression in S. cerevisiae." Nucleic acids research 43.13 (2015): 6620-6630.
 
 01/07/2017
+
 Example.ipynb added to repository
+
 Restriction_Finder updated in repository
 
 Added a jupyter notebook on how to use Restriction_Finder.
 Restriction_Finder is now working properly, and in its final form, for now.
 It's lacking documenting, which will be added in the next days. 
 However the code is heavily commented and can be easily understood without proper documentation.
+
+03/07/2017
+
+Restriction_Finder updated in repository
+final_report added to repository
+
+Some minor corrections were introduced in Restriction_Finder. More warnings added. Documentation still lacking.
+Final report was added. Will be updated in the next days.
+
+
+04/07/2017
+
+Restriction_Finder updated in repository
+final_report updated in repository
+Example.ipynb renamed to Restriction_Finder_Guide_.ipynb
+Algorithm_Pipeline added to repository
+
+Restriction_Finder is now completely documented, all_best function added, to retrieve all of the best results when the best possible result is an isoschizomer.
+final_report underwent some corrections, according to final version delivered to the Professors responsible for the project.
+### Final report includes methodologies, algorithm design and implementation and test building.
+#### Also includes results of testing, results discussion and main conclusions on algorithm's strenghts and weaknesses.
+
+IPython notebook file was updated to match latest changes in the code. Renamed for convenience.
+Graphical pipeline of the algorithm was added for better understanding at algorithm's main steps.
+
