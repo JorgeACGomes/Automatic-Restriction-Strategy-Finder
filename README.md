@@ -1,13 +1,12 @@
+                                                    ![alt text](https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/EEUMLOGO.png/200px-EEUMLOGO.png)
+
+
 # Bioinformatics Project 									
 
-![alt text](https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/EEUMLOGO.png/200px-EEUMLOGO.png)
-<p align="center">
-  <img />
-</p>
 
--> ###### Project Supervisor: @BjornFJohansson <-
+###### Project Supervisor: @BjornFJohansson <-
 
--> ## Automatic restriction strategy finder for Synthetic Biology Constructs <-
+## Automatic restriction strategy finder for Synthetic Biology Constructs <-
 
 Will store the code developed for an ongoing Bioinformatics Project and keep track of the changes made throughout the project development.
 The main goal of this project is to design an algorithm for the automatic selection of the most effective restriction enzymes for DNA analysis based on user defined criteria. With those enzymes we will be able to perform a diagnostic digest over n user inputted sequences.
