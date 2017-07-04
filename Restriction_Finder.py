@@ -43,6 +43,80 @@ class Plasmid:
 
 
 class Restriction_Finder:
+    """Restriction Finder class, for the automatic search of restriction
+    enzymes.
+    
+    Class designed to store information on all inputted sequences, and the
+    restriction enzymes able to cut them and produce distinguishable fragments
+    for each sequence.
+    
+    Parameters
+    ----------
+    **seqs**: list of Dseqrecord(pydna) objects.
+    
+        List of Dseqrecords containing all of the sequences. 
+        Must contain more than one sequence.
+    
+    **min_size**: int, float, optional.
+    
+        Minimum fragment size that is allowed to result from sequence digestion.
+        Lower fragment size, generally yields best results.
+        default:150
+    
+    **r_enzymes**: Restriction_Batch(Biopython) object, optional.
+    
+        Desired set of enzymes to search from, must be either *All* or *Commercial*
+        default:*Commercial*
+    
+    **optim**: bool, optional.
+    
+        Optimization of enzyme selection. Using *False* will yield faster results, but won't look for the best possible enzyme,
+        instead it retrieves a random enzyme from a set of possible enzymes.
+        default:*True*
+    
+    **gel**: bool, optional.
+    
+        Whether or not you wish to visualize the agarose gel produced by the chosen enzyme(s).
+    
+        default:*True*
+    
+    **iso**: bool, optional.
+    
+        Whether or not you permit an enzyme that is an isoschizomer as result.
+        When using *False*, if the best possible enzyme is an isochizomer, the best result will be the following best that is not an isoschizomer.
+    
+        default:*True*
+    
+    **NOTES:**
+    
+        Notice that you don't need to input all of the parameters, 
+        for examples if you want to set *iso* as False and keep other defaults 
+        just do as the example.
+
+    **Examples**
+        # considering the utilization of the file seqs_vegas.txt for sequence retrieval
+            
+            fileseqs = [Dseqrecord(seq, circular=True) for seq in SeqIO.parse('seqs_vegas.txt', 'fasta')]
+            
+            # producing the gel results
+            rf = Restriction_Finder(fileseqs, iso= False)
+            
+            # obtaining lane names
+            rf.lanes()
+            
+            # accessing best enzyme found
+            rf.best
+            # or textual only
+            print(rf.best)
+            
+            # accessing every other possible solution (textual)
+            rf.solutions()       
+            # or for further use
+            rf.results
+            
+        # for more info check Restriction_Finder_User_Guide on GitHub.
+    
+    """
 
     def __init__(self, seqs, min_size=150, r_enzymes=Commercial, optim=True, gel=True, iso=True):
         self.seqs = seqs
@@ -294,7 +368,6 @@ class Restriction_Finder:
         self.best_set(enzymes1, enzymes2)
 
     def best_set(self, enzymes1, enzymes2):
-        
         """this function should retrieve the best combination of enzymes for 
         gel analysis. Since we are trying to minimize the costs let's see which
         re's from enzymes1 are present in enzymes 2 and if possible try to 
@@ -474,7 +547,7 @@ class Restriction_Finder:
         if self.results is None:
             warning('results')
             return 
-        if self.are_isoschizomers():
+        if self.is_isoschizomer():
             iso = True
         else:
             iso = False
@@ -494,10 +567,10 @@ class Restriction_Finder:
             b = self.results.index(self.best)
             print(self.results[0:b]+ self.results[b+1:])
 
-        return self.results
+        return
 
-    def are_isoschizomers(self):
-        """Defines if any of the results are isoschizomers"""
+    def is_isoschizomer(self):
+        """Determines if the best result is an isoschizomer"""
         if self.results is None:
             warning('results')
             return
@@ -505,6 +578,14 @@ class Restriction_Finder:
             if self.best in e.isoschizomers():
                 return True
         return False
+    
+    def all_best(self):
+        """If best result is an isoschizomer, returns all of the isoschizomers
+        producing the best results"""
+        if self.is_isoschizomer:
+            return [self.best] + [x for x in self.best.isoschizomers() if x in self.results]
+        else:
+            return warning('not_iso')
 
 
 # -------------- auxiliary functions --------------------- #
@@ -562,7 +643,8 @@ def warning(code):
          'seq_size': 'Inputted sequences are too small and thus will not provide visible bands in an agarose gel\n',
          'Dseqrecord': 'At least one of the inputted seqs is not a Dseqrecords\n',
          'seq_num': 'A minimum of 2 sequences is required\n',
-         'results': 'There were no results for the given parameters and sequences\n'
+         'results': 'There were no results for the given parameters and sequences\n',
+         'not_iso': 'The best solution is not an isoschizomer'
          }
     print(d[code])
     if code in abort:
@@ -575,7 +657,7 @@ if __name__ == '__main__':
     fileseqs = [Dseqrecord(seq, circular=True) for seq in SeqIO.parse('seqs_vegas.txt', 'fasta')]
     import time
     ti = time.time()
-    rf = Restriction_Finder(fileseqs, 150, Commercial, optim=False, iso=True)
+    rf = Restriction_Finder(fileseqs, 150)
     #for p in rf.plasmids:
     #   print(len(p.insert.seq))
     #print(len(rf.contiguous.seq))
@@ -584,8 +666,8 @@ if __name__ == '__main__':
     rf.solutions()
     #rf.to_gel(BcoDI)
     #rf.lanes()
-    print(rf.are_isoschizomers())
-    rf.lanes()
+    print(rf.is_isoschizomer())
+    print(rf.all_best())
     #sol = rf.solutions()
     #fileseqs[0].cut(*rf.results)
     print(round(time.time()-ti, 3))
