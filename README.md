@@ -1,7 +1,8 @@
 # Bioinformatics Project 
-Project Supervisor: Bjorn Johansson
 
-Automatic restriction strategy finder for Synthetic Biology Constructs
+###### Project Supervisor: @BjornFJohansson
+
+## Automatic restriction strategy finder for Synthetic Biology Constructs
 
 Will store the code developed for an ongoing Bioinformatics Project and keep track of the changes made throughout the project development.
 The main goal of this project is to design an algorithm for the automatic selection of the most effective restriction enzymes for DNA analysis based on user defined criteria. With those enzymes we will be able to perform a diagnostic digest over n user inputted sequences.
@@ -13,12 +14,10 @@ which will add the algorithm explanation, the idea behind the chosen approach, u
 Pydna repository: https://github.com/BjornFJohansson/pydna
 
 
-#--------------------------------------------------------------------------------------------------------------------------------------#
 
+###### Changelog:
 
-Changelog:
-
-27/06/2017 
+###### 27/06/2017 
 
 Restriction_Finder added to repository
 
@@ -27,7 +26,7 @@ Got some compatibility issues with the sequence representation, namely the Dseq 
 It should be pushed sooner, however I wasn't yet too capable with git.
 
 
-27/06/2017 (2)
+###### 27/06/2017 (2)
 
 Restriction_Finder updated in repository
 
@@ -36,7 +35,7 @@ Enzyme import and sequence input were changed.
 Above changes were made after meeting with professor Bjorn who helped me figure that out.
 Algorithm not yet implemented, but it should begin to look better during the week.
 
-27/06/2017 (3)
+###### 27/06/2017 (3)
 
 Restriction_Finder updated in repository
 
@@ -45,27 +44,27 @@ Also, all of the enzymes that are able to cut twice or more on all of the sequen
 Next step should be, choosing the enzyme pair that produces the best fragments for gel analysis.
 
 
-27/06/2017 (4)
+###### 27/06/2017 (4)
 
 seqs.txt added to repository
 
 File contains fasta sequences from cloning vectors found in genbank that will be used for testing.
 
 
-28/06/2017 
+###### 28/06/2017
 
 Restriction_Finder updated in repository
 
 Plasmid class has been added to make the contiguous/non-contiguous sequences manipulation easier.
 Several changes to enzyme search algorithm.
 
-29/06/2017 
+###### 29/06/2017
 
 Restriction_Finder updated in repository
 
 Enzyme selection algorithm already works, now i just need to get the set that produces the best results, for a future gel analysis.
 
-29/06/2017(2)
+###### 29/06/2017(2)
 
 Preliminary_report.pdf added to repository
 seqs_vegas.txt added to repository
@@ -76,18 +75,18 @@ yeast plasmid cloning experiments, retrieved from:
 
 Mitchell, Leslie A., et al. "Versatile genetic assembly system (VEGAS) to assemble pathways for expression in S. cerevisiae." Nucleic acids research 43.13 (2015): 6620-6630.
 
-01/07/2017
+###### 01/07/2017
 
 Example.ipynb added to repository
 
 Restriction_Finder updated in repository
 
-Added a jupyter notebook on how to use Restriction_Finder.
+Added a jupyter/IPython notebook on how to use Restriction_Finder.
 Restriction_Finder is now working properly, and in its final form, for now.
 It's lacking documenting, which will be added in the next days. 
 However the code is heavily commented and can be easily understood without proper documentation.
 
-03/07/2017
+###### 03/07/2017
 
 Restriction_Finder updated in repository
 final_report added to repository
@@ -96,7 +95,7 @@ Some minor corrections were introduced in Restriction_Finder. More warnings adde
 Final report was added. Will be updated in the next days.
 
 
-04/07/2017
+###### 04/07/2017
 
 Restriction_Finder updated in repository
 final_report updated in repository
@@ -111,3 +110,7 @@ final_report underwent some corrections, according to final version delivered to
 IPython notebook file was updated to match latest changes in the code. Renamed for convenience.
 Graphical pipeline of the algorithm was added for better understanding at algorithm's main steps.
 
+- [x] Finished
+- [x] Tested
+- [x] Guide Written
+- [x] Fully Functional
