@@ -1,3 +1,5 @@
+![alt text](https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/EEUMLOGO.png/200px-EEUMLOGO.png)
+
 # Bioinformatics Project 
 
 ###### Project Supervisor: @BjornFJohansson
