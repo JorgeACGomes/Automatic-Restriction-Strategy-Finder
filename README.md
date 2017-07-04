@@ -104,11 +104,19 @@ Algorithm_Pipeline added to repository
 
 Restriction_Finder is now completely documented, all_best function added, to retrieve all of the best results when the best possible result is an isoschizomer.
 final_report underwent some corrections, according to final version delivered to the Professors responsible for the project.
-### Final report includes methodologies, algorithm design and implementation and test building.
-#### Also includes results of testing, results discussion and main conclusions on algorithm's strenghts and weaknesses.
-
 IPython notebook file was updated to match latest changes in the code. Renamed for convenience.
 Graphical pipeline of the algorithm was added for better understanding at algorithm's main steps.
+
+
+### Final report includes:
+- *methodologies*
+- *algorithm design and implementation*
+- *test building*
+- *Test results*
+- *Results Discussion*
+- *Main conclusions on algorithm's strengths and weaknesses*
+
+### Status:
 
 - [x] Finished
 - [x] Tested
