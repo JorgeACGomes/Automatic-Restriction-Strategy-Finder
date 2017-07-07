@@ -107,6 +107,13 @@ final_report updated in repository
 Example.ipynb renamed to Restriction_Finder_Guide_.ipynb
 Algorithm_Pipeline added to repository
 
+###### 07/07/2017
+
+project_presentation.pdf added to repository
+
+
+
+
 Restriction_Finder is now completely documented, all_best function added, to retrieve all of the best results when the best possible result is an isoschizomer.
 final_report underwent some corrections, according to final version delivered to the Professors responsible for the project.
 IPython notebook file was updated to match latest changes in the code. Renamed for convenience.
